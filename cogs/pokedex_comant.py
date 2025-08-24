@@ -49,6 +49,20 @@ class PokedexComant(commands.Cog):
             # Obtener datos de la PokeAPI
             response = requests.get(f"https://pokeapi.co/api/v2/pokemon/{pokemon.lower()}")
             
+            if response.status_code != 200:
+                embed = discord.Embed(
+                    title="❌ Pokémon no encontrado",
+                    description=f"No se encontró el Pokémon: **{pokemon}**",
+                    color=0xFF0000
+                )
+                embed.add_field(
+                    name="💡 Sugerencias",
+                    value="• Revisa la ortografía\n• Usa el nombre en inglés\n• Prueba con el número de la Pokédex",
+                    inline=False
+                )
+                await ctx.send(embed=embed)
+                return
+            
             data = response.json()
             
             # Obtener datos de especie para la descripción
@@ -90,7 +104,13 @@ class PokedexComant(commands.Cog):
             await ctx.send(embed=embed)
                 
         except Exception as e:
-            print("Error: ", e)
+            error_embed = discord.Embed(
+                title="❌ Error del servidor",
+                description="No se pudo obtener la información del Pokémon. Intenta nuevamente.",
+                color=0xFF0000
+            )
+            await ctx.send(embed=error_embed)
+            print(f"Error: {e}")
     
     def get_color(self, type_name):
         """Asigna colores según el tipo del Pokémon"""
