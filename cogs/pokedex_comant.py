@@ -44,7 +44,7 @@ class PokedexComant(commands.Cog):
             # Crear embed bonito
             embed = discord.Embed(
                 title=f"#{data["id"]:03d} - {data["name"].title()}",
-                color=self.get_color(data["types"][0]["types"]["name"]),
+                color=self.get_color(data["types"][0]["type"]["name"]),
                 description=self.get_description(species_data)
             )
             
