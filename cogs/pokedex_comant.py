@@ -23,6 +23,11 @@ class PokedexComant(commands.Cog):
         except Exception as e:
             print("Error: ", e)
 
+    @poked.error
+    async def error_type(self, ctx, error):
+        if isinstance(error, commands.errors.MissingRequiredArgument):
+            await ctx.send("tienes que pasar un pokemon")
+    
     @commands.command(name="poked-info")
     @commands.has_permissions(administrator=True)
     async def poked_info(self, ctx, args):
@@ -115,11 +120,6 @@ class PokedexComant(commands.Cog):
         gen_url = species_data['generation']['url']
         gen_number = gen_url.split('/')[-2]
         return f"Gen {gen_number}"
-    
-    @poked.error
-    async def error_type(self, ctx, error):
-        if isinstance(error, commands.errors.MissingRequiredArgument):
-            await ctx.send("tienes que pasar un pokemon")
             
 async def setup(bot):
     await bot.add_cog(PokedexComant(bot))
