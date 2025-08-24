@@ -30,15 +30,24 @@ class PokedexComant(commands.Cog):
     
     @commands.command(name="poked-info")
     @commands.has_permissions(administrator=True)
-    async def poked_info(self, ctx, args):
+    async def poked_info(self, ctx, *, pokemon: str = None):
+        if pokemon is None:
+            embed = discord.Embed(
+                title="❌ Error",
+                description="Debes especificar un Pokémon. Ejemplo: `/poked-info pikachu`",
+                color=0xFF0000
+            )
+            embed.add_field(
+                name="💡 Uso correcto",
+                value="`/poked-info <nombre>`",
+                inline=False
+            )
+            embed.set_footer(text="También puedes usar el número de la Pokédex")
+            await ctx.send(embed=embed)
+            return
         try:
             # Obtener datos de la PokeAPI
-            pokemon = args.split(" ",1)[0].lower()
-            response = requests.get(f"https://pokeapi.co/api/v2/pokemon/{pokemon}")
-            
-            if response.status_code != 200:
-                await ctx.send("Informacion del pokemon no encontrada")
-                return
+            response = requests.get(f"https://pokeapi.co/api/v2/pokemon/{pokemon.lower()}")
             
             data = response.json()
             
