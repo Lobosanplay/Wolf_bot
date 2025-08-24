@@ -78,6 +78,44 @@ class PokedexComant(commands.Cog):
         except Exception as e:
             print("Error: ", e)
     
+    def get_color(self, type_name):
+        """Asigna colores según el tipo del Pokémon"""
+        colors = {
+            'normal': 0xA8A878, 'fire': 0xF08030, 'water': 0x6890F0,
+            'electric': 0xF8D030, 'grass': 0x78C850, 'ice': 0x98D8D8,
+            'fighting': 0xC03028, 'poison': 0xA040A0, 'ground': 0xE0C068,
+            'flying': 0xA890F0, 'psychic': 0xF85888, 'bug': 0xA8B820,
+            'rock': 0xB8A038, 'ghost': 0x705898, 'dragon': 0x7038F8,
+            'dark': 0x705848, 'steel': 0xB8B8D0, 'fairy': 0xEE99AC
+        }
+        return colors.get(type_name, 0x000000)
+
+    def format_stats(self, stats):
+        """Formatea las estadísticas de forma legible"""
+        stat_names = {
+            'hp': '❤️ HP', 'attack': '⚔️ Ataque', 
+            'defense': '🛡️ Defensa', 'special-attack': '🔮 Ataque Especial',
+            'special-defense': '✨ Defensa Especial', 'speed': '⚡ Velocidad'
+        }
+        
+        return "\n".join([
+            f"{stat_names[stat['stat']['name']]}: **{stat['base_stat']}**"
+            for stat in stats
+        ])
+
+    def get_description(self, species_data):
+        """Obtiene la descripción en español"""
+        for entry in species_data['flavor_text_entries']:
+            if entry['language']['name'] == 'es':
+                return entry['flavor_text'].replace('\n', ' ').replace('\f', ' ')
+        return "Descripción no disponible en español."
+
+    def get_generation(self, species_data):
+        """Obtiene la generación del Pokémon"""
+        gen_url = species_data['generation']['url']
+        gen_number = gen_url.split('/')[-2]
+        return f"Gen {gen_number}"
+    
     @poked.error
     async def error_type(self, ctx, error):
         if isinstance(error, commands.errors.MissingRequiredArgument):
