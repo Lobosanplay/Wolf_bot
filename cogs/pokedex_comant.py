@@ -1,50 +1,47 @@
 import requests
 import discord
+from discord import app_commands
 from discord.ext import commands
-
 
 class PokedexComant(commands.Cog):
     def __init__(self, bot):
-        self.bot = bot,
+        self.bot = bot  # <-- Quita la coma aquí
         
-    @commands.command(name="poked")
-    @commands.has_permissions(administrator=True)
-    async def poked(self, ctx, args):
+    @app_commands.command(
+        name="poked",
+        description="Muestra una imagen de un Pokémon"
+    )
+    @app_commands.describe(pokemon="Nombre del Pokémon a buscar")
+    async def poked(self, interaction: discord.Interaction, pokemon: str):  # <-- Corrección aquí
+        await interaction.response.defer()
+        
         try:
-            pokemon = args.split(" ",1)[0].lower()
-            result = requests.get(f"https://pokeapi.co/api/v2/pokemon/{pokemon}")
+            result = requests.get(f"https://pokeapi.co/api/v2/pokemon/{pokemon.lower()}")
             
-            if result.text == "Not Found":
-                await ctx.send("Pokemon no Encontrado")
+            if result.status_code != 200:  # <-- Mejor forma de verificar
+                await interaction.followup.send("❌ Pokémon no encontrado")
             else:
-                image_url = result.json()["sprites"]["front_default"]
-                await ctx.send(image_url)
+                data = result.json()
+                image_url = data["sprites"]["other"]["official-artwork"]["front_default"] or data["sprites"]["front_default"]
+                embed = discord.Embed(
+                    title=f"{data['name'].title()}",
+                    color=0x00FF00
+                )
+                embed.set_image(url=image_url)
+                await interaction.followup.send(embed=embed)
 
         except Exception as e:
             print("Error: ", e)
+            await interaction.followup.send("❌ Error al buscar el Pokémon")
 
-    @poked.error
-    async def error_type(self, ctx, error):
-        if isinstance(error, commands.errors.MissingRequiredArgument):
-            await ctx.send("tienes que pasar un pokemon")
-    
-    @commands.command(name="poked-info")
-    @commands.has_permissions(administrator=True)
-    async def poked_info(self, ctx, *, pokemon: str = None):
-        if pokemon is None:
-            embed = discord.Embed(
-                title="❌ Error",
-                description="Debes especificar un Pokémon. Ejemplo: `/poked-info pikachu`",
-                color=0xFF0000
-            )
-            embed.add_field(
-                name="💡 Uso correcto",
-                value="`/poked-info <nombre>`",
-                inline=False
-            )
-            embed.set_footer(text="También puedes usar el número de la Pokédex")
-            await ctx.send(embed=embed)
-            return
+    @app_commands.command(
+        name="poked_info",
+        description="Muestra información detallada de un Pokémon"
+    )
+    @app_commands.describe(pokemon="Nombre del Pokémon a buscar")
+    async def poked_info(self, interaction: discord.Interaction, pokemon: str):  # <-- Corrección aquí
+        await interaction.response.defer()
+        
         try:
             # Obtener datos de la PokeAPI
             response = requests.get(f"https://pokeapi.co/api/v2/pokemon/{pokemon.lower()}")
@@ -60,18 +57,18 @@ class PokedexComant(commands.Cog):
                     value="• Revisa la ortografía\n• Usa el nombre en inglés\n• Prueba con el número de la Pokédex",
                     inline=False
                 )
-                await ctx.send(embed=embed)
+                await interaction.followup.send(embed=embed)
                 return
-            
+
             data = response.json()
             
             # Obtener datos de especie para la descripción
-            species_responce = requests.get(data["species"]["url"])
-            species_data = species_responce.json()
+            species_response = requests.get(data["species"]["url"])
+            species_data = species_response.json()
             
             # Crear embed bonito
             embed = discord.Embed(
-                title=f"#{data["id"]:03d} - {data["name"].title()}",
+                title=f"#{data['id']:03d} - {data['name'].title()}",
                 color=self.get_color(data["types"][0]["type"]["name"]),
                 description=self.get_description(species_data)
             )
@@ -101,7 +98,7 @@ class PokedexComant(commands.Cog):
             # Footer con datos adicionales
             embed.set_footer(text=f"💕 Experiencia base: {data['base_experience']} | 🎮 Generación: {self.get_generation(species_data)}")
             
-            await ctx.send(embed=embed)
+            await interaction.followup.send(embed=embed)
                 
         except Exception as e:
             error_embed = discord.Embed(
@@ -109,7 +106,7 @@ class PokedexComant(commands.Cog):
                 description="No se pudo obtener la información del Pokémon. Intenta nuevamente.",
                 color=0xFF0000
             )
-            await ctx.send(embed=error_embed)
+            await interaction.followup.send(embed=error_embed)
             print(f"Error: {e}")
     
     def get_color(self, type_name):
