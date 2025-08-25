@@ -25,9 +25,11 @@ class PokedexComant(commands.Cog):
                 image_url = data["sprites"]["other"]["official-artwork"]["front_default"] or data["sprites"]["front_default"]
                 embed = discord.Embed(
                     title=f"{data['name'].title()}",
-                    color=0x00FF00
+                    color=self.get_color(data["types"][0]["type"]["name"]),
+                    description=f"✨ **Tipos:** {' | '.join([t['type']['name'].title() for t in data['types']])}"
                 )
                 embed.set_image(url=image_url)
+                embed.set_footer(text=f"Pokédex #{(data['id'])}")
                 await interaction.followup.send(embed=embed)
 
         except Exception as e:
