@@ -32,7 +32,6 @@ async def load_cogs():
 @bot.event
 async def on_ready():
     print(f'✅ {bot.user} ha iniciado sesión!')
-    print(f'🔗 Invita al bot con: https://discord.com/oauth2/authorize?client_id={bot.user.id}&scope=bot%20applications.commands')
     
     # Sincronizar Slash Commands
     try:
