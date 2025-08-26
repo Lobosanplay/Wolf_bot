@@ -224,6 +224,15 @@ class PokemonGameCog(commands.Cog):
                 ephemeral=True
             )
             return
+        
+        game['hints_used'] += 1
+        first_letter = game['pokemon_name'][0].upper()
+        
+        await interaction.response.send_message(
+            f"💡 **Pista:** La primera letra es **{first_letter}**",
+            ephemeral=True
+        )
+
 
 
         
