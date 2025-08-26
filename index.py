@@ -27,7 +27,7 @@ async def load_cogs():
                 await bot.load_extension(f"cogs.{filename[:-3]}")
         print("✅ Cogs cargados correctamente")
     except Exception as e:
-        print(f"❌ Error cargando cogs: {e}")
+        print(e)
 
 @bot.event
 async def on_ready():
@@ -38,7 +38,7 @@ async def on_ready():
         synced = await bot.tree.sync()
         print(f"✅ {len(synced)} Slash Commands sincronizados")
     except Exception as e:
-        print(f"❌ Error sincronizando Slash Commands: {e}")
+        print(e)
 
 async def main():
     async with bot:
