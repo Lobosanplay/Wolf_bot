@@ -270,4 +270,31 @@ class PokemonGameCog(commands.Cog):
             f"💡 **Pista:** El tipo es **{'/' .join(types)}**",
             ephemeral=True
         )
+    
+    @app_commands(
+        name="giveup",
+        description="🏳️ Rendirse y revelar el Pokémon"
+    )
+    async def give_up(self, interaction: discord.Interaction):
+        """Revela el Pokémon actual"""
+        if interaction.channel_id not in self.active_games:
+            await interaction.response.send_message(
+                "❌ No hay ningún juego activo en este canal",
+                ephemeral=True
+            )
+            return
         
+        game = self.active_games[interaction.channel_id]
+        
+        embed = discord.Embed(
+            title="🏳️ **Te has rendido**",
+            description=f"El Pokémon era: **{game['pokemon_name'].title()}**",
+            color=0xFFA500
+        )
+        embed.set_image(url=f"https://pokeapi.co/api/v2/pokemon/{game['pokemon_id']}/sprites")
+        
+        await interaction.response.send_message(embed=embed)
+        del self.active_games[interaction.channel.id]
+
+async def setup(bot):
+    await bot.add_cog(PokemonGameCog(bot))
