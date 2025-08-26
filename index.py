@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 token = os.getenv("TOKEN")
-
+id = os.getenv("ID")
 # Configurar intents con Slash Commands
 intents = discord.Intents.default()
 intents.message_content = True
@@ -26,6 +26,7 @@ async def load_cogs():
             if filename.endswith(".py") and filename != "__init__.py":
                 await bot.load_extension(f"cogs.{filename[:-3]}")
         print("✅ Cogs cargados correctamente")
+        print(f"Invita al bot con este comando: \n https://discord.com/oauth2/authorize?client_id={id}&permissions=8&integration_type=0&scope=applications.commands+bot")
     except Exception as e:
         print(e)
 

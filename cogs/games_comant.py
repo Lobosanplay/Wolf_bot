@@ -10,7 +10,7 @@ from PIL import Image, ImageFilter
 
 class PokemonGameCog(commands.Cog):
     def __init__(self, bot):
-        self.bot = bot,
+        self.bot = bot
         self.active_games = {} # Almacenar juegos activos por canal
         
     @app_commands.command(
@@ -152,55 +152,74 @@ class PokemonGameCog(commands.Cog):
             )
             embed.set_image(url=f"https://pokeapi.co/api/v2/pokemon/{game['pokemon_id']}/sprites")
             await channel.send(embed=embed)
-        
-        del self.active_games[channel_id]
+        # Verificar nuevamente antes de borrar (por si acaso)
+        if channel_id in self.active_games:
+            del self.active_games[channel_id]
     
-    @commands.Cog.listener()
-    async def on_message(self, message):
+    @app_commands.command(
+        name="answer",
+        description="Respuesta de la adivinanza"
+    )
+    @app_commands.describe(respuesta="Tu respuesta al Pokémon")
+    async def answer(self, interaction: discord.Interaction, respuesta: str):
         """Escuchar respuestas de los usuarios"""
-        if message.author.bot:
+        if interaction.channel_id not in self.active_games:
+            await interaction.response.send_message(
+                "❌ No hay ningún juego activo en este canal",
+                ephemeral=True
+            )
             return
         
-        if message.channel.id in self.active_games:
-            game = self.active_games[message.channel.id]
-            user_guess = message.content.lower().strip()
-            correct_name = game["pokemon_name"].lower()
+        game = self.active_games[interaction.channel_id]
+        user_guess = respuesta.lower().strip()
+        correct_name = game["pokemon_name"].lower()
+        
+        game["attempts"] += 1
+        
+        await interaction.response.defer()
+
+        # Verificar respuesta
+        if user_guess == correct_name:
+            # ¡Correcto!
+            time_taken = (discord.utils.utcnow() - game['start_time']).total_seconds()
             
-            game["attempts"] += 1
+            embed = discord.Embed(
+                title="🎉 **¡Correcto!**",
+                description=f"**{interaction.user.mention}** adivinó el Pokémon!",
+                color=0x00FF00
+            )
+            embed.add_field(
+                name="📊 Estadísticas",
+                value=f"**Pokémon:** {game['pokemon_name'].title()}\n"
+                    f"**Intentos:** {game['attempts']}\n"
+                    f"**Pistas usadas:** {game['hints_used']}\n"
+                    f"**Tiempo:** {time_taken:.1f} segundos",
+                inline=False
+            )
+            embed.set_image(url=f"https://pokeapi.co/api/v2/pokemon/{game['pokemon_id']}/sprites")
             
-            # Verificar respuesta
-            if user_guess == correct_name:
-                # ¡Correcto!
-                time_taken = (discord.utils.utcnow() - game['start_time']).total_seconds()
-                
-                embed = discord.Embed(
-                    title="🎉 **¡Correcto!**",
-                    description=f"**{message.author.mention}** adivinó el Pokémon!",
-                    color=0x00FF00
-                )
-                embed.add_field(
-                    name="📊 Estadísticas",
-                    value=f"**Pokémon:** {game['pokemon_name'].title()}\n"
-                        f"**Intentos:** {game['attempts']}\n"
-                        f"**Pistas usadas:** {game['hints_used']}\n"
-                        f"**Tiempo:** {time_taken:.1f} segundos",
-                    inline=False
-                )
-                embed.set_image(url=f"https://pokeapi.co/api/v2/pokemon/{game['pokemon_id']}/sprites")
-                
-                await message.channel.send(embed=embed)
-                del self.active_games[message.channel.id]
-                
-            elif game["attempts"] >= 3:
-                # Demasiados intentos
-                embed = discord.Embed(
-                    title="❌ **Demasiados intentos**",
-                    description=f"El Pokémon era: **{game['pokemon_name'].title()}**",
-                    color=0xFF0000
-                )
-                embed.set_image(url=f"https://pokeapi.co/api/v2/pokemon/{game['pokemon_id']}/sprites")
-                await message.channel.send(embed=embed)
-                del self.active_games[message.channel.id]
+            await interaction.followup.send(embed=embed)
+            if interaction.channel_id in self.active_games:
+                del self.active_games[interaction.channel_id]
+            
+        elif game["attempts"] >= 3:
+            # Demasiados intentos
+            embed = discord.Embed(
+                title="❌ **Demasiados intentos**",
+                description=f"El Pokémon era: **{game['pokemon_name'].title()}**",
+                color=0xFF0000
+            )
+            embed.set_image(url=f"https://pokeapi.co/api/v2/pokemon/{game['pokemon_id']}/sprites")
+            await interaction.followup.send(embed=embed)
+            if interaction.channel_id in self.active_games:
+                del self.active_games[interaction.channel_id]
+        else:
+            # Respuesta incorrecta, pero aún tiene intentos
+            await interaction.followup.send(
+            f"❌ Incorrecto. Te quedan **{3 - game['attempts']}** intentos.",
+            ephemeral=True
+        )
+
                     
     @app_commands.command(
         name="pokedexhint",
