@@ -233,6 +233,41 @@ class PokemonGameCog(commands.Cog):
             ephemeral=True
         )
 
+    @app_commands.command(
+        name="typehint",
+        description="💡 Obtén una pista (tipo del Pokémon)"
+    )
+    async def type_hint(self, interaction: discord.Interaction):
+        """Da el tipo del Pokémon"""
+        if interaction.channel_id not in self.active_games:
+            await interaction.response.send_message(
+                "❌ No hay ningún juego activo en este canal",
+                ephemeral=True
+            )
+            return
+        
+        game = self.active_games[interaction.channel_id]
+        
+        if game["hints_used"] >= 2:
+            await interaction.response.send_message(
+                "❌ Ya usaste todas las pistas disponibles",
+                ephemeral=True
+            )
+            return
+        
+        pokemon_data = self.get_pokemon_data(game["pokemon_id"])
+        if not pokemon_data:
+            await interaction.response.send_message(
+                "❌ Error al obtener la pista",
+                ephemeral=True
+            )
+            return
 
-
+        types = [t["type"]["name"].title() for t in pokemon_data["types"]]
+        game["hints_used"] += 1
+        
+        await interaction.followup.send(
+            f"💡 **Pista:** El tipo es **{'/' .join(types)}**",
+            ephemeral=True
+        )
         
