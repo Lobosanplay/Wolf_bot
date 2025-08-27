@@ -6,7 +6,7 @@ import random
 import asyncio
 import io
 from PIL import Image, ImageFilter
-
+import numpy as np
 
 class PokemonGameCog(commands.Cog):
     def __init__(self, bot):
@@ -120,18 +120,31 @@ class PokemonGameCog(commands.Cog):
             # Crear silueta con PIL
             image = Image.open(io.BytesIO(response.content))
             
-            # Convertir a escala de grises
-            gray_image = image.convert('L')
-            # Crear silueta (negro puro)
-            # silhouette = gray_image.point(lambda x: 0 if x > 5 else 0)  # Todo negro
-            silhouette = gray_image.filter(ImageFilter.GaussianBlur(1))
+            # Convertir a RGBA para manejar transparencia
+            if image.mode != 'RGBA':
+                image = image.convert('RGBA')
+            
+            # Crear silueta negra basada en el canal alpha
+            data = np.array(image)
+            
+            # Donde haya transparencia (alpha = 0), mantener transparente
+            # Donde haya opacidad (alpha > 0), poner negro
+            black_silhouette = np.zeros_like(data)
+            black_silhouette[..., 3] = data[..., 3]  # Copiar canal alpha
+            
+            # Convertir de nuevo a imagen
+            silhouette = Image.fromarray(black_silhouette, 'RGBA')
+            
+            # Opcional: aplicar un pequeño blur para suavizar bordes
+            silhouette = silhouette.filter(ImageFilter.GaussianBlur(0.5))
             
             # Guardar en buffer
             buffer = io.BytesIO()
-            silhouette.save(buffer, format='PNG')
+            silhouette.save(buffer, format='PNG', optimize=True)
             buffer.seek(0)
             
             return buffer
+        
         except Exception as e:
             print(f"Error creando silueta: {e}")
             return None
