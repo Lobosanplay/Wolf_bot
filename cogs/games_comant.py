@@ -135,7 +135,7 @@ class PokemonGameCog(commands.Cog):
             # Convertir de nuevo a imagen
             silhouette = Image.fromarray(black_silhouette, 'RGBA')
             
-            # Opcional: aplicar un pequeño blur para suavizar bordes
+            # aplicar un pequeño blur para suavizar bordes
             silhouette = silhouette.filter(ImageFilter.GaussianBlur(0.5))
             
             # Guardar en buffer
