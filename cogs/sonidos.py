@@ -55,6 +55,47 @@ class SonidosPokemon(commands.Cog):
             print("Error: ", e)
             await interaction.followup.send("❌ Error al obtener el sonido del Pokémon")
     
+    @app_commands.command(
+        name="get-pokemon-sound",
+        description="Obtiene solo el archivo de audio del Pokémon"
+    )
+    @app_commands.describe(pokemon="Pokemon a buscar")
+    async def GetPokemonSound(self, interaction: discord.Interaction, pokemon: str):
+        """Solo envía el archivo de audio sin reproducir"""
+        await interaction.response.defer()
+        
+        try:
+            # Obtener datos del Pokémon
+            result = requests.get(f"https://pokeapi.co/api/v2/pokemon/{pokemon.lower()}")
+            if result.status_code != 200:
+                await interaction.followup.send("❌ Pokémon no encontrado")
+                return
+
+            data = result.json()
+            voice_url = data["cries"]["legacy"]
+            
+            # Descargar el audio
+            audio_response = requests.get(voice_url)
+            if audio_response.status_code != 200:
+                await interaction.followup.send("❌ Error al descargar el audio")
+                return
+            
+            # Crear archivo de audio
+            audio_file = discord.File(
+                io.BytesIO(audio_response.content),
+                filename=f"{data['name']}_cry.ogg"
+            )
+            
+            # Enviar solo el archivo
+            await interaction.followup.send(
+                content=f"🎵 Sonido de {data['name'].title()}",
+                file=audio_file
+            )
+            
+        except Exception as e:
+            print("Error: ", e)
+            await interaction.followup.send("❌ Error al obtener el sonido del Pokémon")
+    
     def get_color(self, type_name):
         """Asigna colores según el tipo del Pokémon"""
         colors = {
