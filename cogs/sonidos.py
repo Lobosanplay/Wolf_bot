@@ -44,9 +44,6 @@ class SonidosPokemon(commands.Cog):
                 color=self.get_color(data["types"][0]["type"]["name"]),
                 description=f"Sonido de {data['name'].title()}"
             )
-            embed.add_field(name="🎵 Sonido", value="Archivo de audio adjunto", inline=False)
-            embed.add_field(name="✨ Tipos", value=' | '.join([t['type']['name'].title() for t in data['types']]), inline=True)
-            embed.set_footer(text=f"Pokédex #{data['id']}")
             
             # Enviar mensaje con el audio
             await interaction.followup.send(embed=embed, file=audio_file)

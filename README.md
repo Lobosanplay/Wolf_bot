@@ -16,7 +16,9 @@
 - pokedexhint: primera letra del pokemon.
 - typehint: typo del pokemon.
 - giveup: Para rendirse.
-
+### 4. Voice Pokemon
+- voice-pokemon <pokemon>: devuelve un audio en mensaje del pokemon selecionado.
+- get-pokemon-sound <pokemon>: devuelve el archivo en audio del pokemon elegido.
 ## Configuración
 1. Clona el repositorio:
 ```cmd
